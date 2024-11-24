@@ -50,8 +50,35 @@ mock -v -r $config  \
      --sources=${SOURCES} \
      --resultdir=./outputs -N
 
+config='alma+epel-9-x86_64'
+mock -v -r $config  \
+     --additional-package=libpng-devel \
+     --additional-package=tk-devel \
+     --additional-package=libX11-devel \
+     --additional-package=gcc-gfortran \
+     --additional-package=perl \
+     --additional-package=glibc-common \
+     --additional-package=openssl \
+     --spec=${NAME}.spec \
+     --sources=${SOURCES} \
+     --resultdir=./outputs -N
+
+
 cp ${NAME}.spec.base ${NAME}.spec
 config='fedora-40-x86_64'
+mock -v -r $config \
+     --additional-package=libpng-devel \
+     --additional-package=tk-devel \
+     --additional-package=libX11-devel \
+     --additional-package=gcc-gfortran \
+     --additional-package=perl \
+     --additional-package=glibc-common \
+     --additional-package=openssl \
+     --spec=${NAME}.spec \
+     --sources=${SOURCES} \
+     --resultdir=./outputs -N
+
+config='fedora-41-x86_64'
 mock -v -r $config \
      --additional-package=libpng-devel \
      --additional-package=tk-devel \

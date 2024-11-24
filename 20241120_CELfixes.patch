@@ -1539,3 +1539,108 @@ diff -up ./pgplot/sys_linux/g77_gcc.conf.orig ./pgplot/sys_linux/g77_gcc.conf
  
  # Optional:
  # On systems such as Solaris 2.x, that allow specification of the
+diff -up ./pgplot/drivers/gidriv.f.orig ./pgplot/drivers/gidriv.f
+--- ./pgplot/drivers/gidriv.f.orig	2024-11-24 11:27:08.018005363 -0500
++++ ./pgplot/drivers/gidriv.f	2024-11-24 11:27:26.729946231 -0500
+@@ -525,7 +525,7 @@ C
+       INTEGER OLDPRE, BITS
+       INTEGER GRWFCH, GRWFIL
+       BYTE BLKOUT(0:254)
+-      BYTE PIXMAP1
++      BYTE GRGIPX1
+ 
+       COMMON /GRGICO/ BMAX, BMULT, BREST, BOUT, BLKOUT
+ 
+@@ -595,7 +595,7 @@ C
+       CALL GRGI07(UNIT, CLEAR)
+       IN=1
+       TOTAL=BX*BY
+-      PRE=PIXMAP1(PIXMAP,BX,BY,IN)
++      PRE=GRGIPX1(PIXMAP,BX,BY,IN)
+       IF (PRE.LT.0) PRE = PRE+256
+ *
+ * Start new data stream at line 310:
+@@ -613,7 +613,7 @@ C
+ *
+   320 IF (IN.GE.TOTAL) GOTO 350
+       IN=IN+1
+-      EXT=PIXMAP1(PIXMAP,BX,BY,IN)
++      EXT=GRGIPX1(PIXMAP,BX,BY,IN)
+       IF (EXT.LT.0) EXT = EXT+256
+       OLDPRE=PRE
+       PRE=CODE(PRE,EXT)
+@@ -740,7 +740,7 @@ C        -- last resort: invent a new na
+       NAME2 = TMP(:L)
+       END
+ 
+-      BYTE FUNCTION PIXMAP1(PIXMAP,BX,BY,N)
++      BYTE FUNCTION GRGIPX1(PIXMAP,BX,BY,N)
+       IMPLICIT NONE
+       INTEGER N, BX, BY
+       BYTE PIXMAP(BX,BY)
+@@ -751,7 +751,7 @@ C     SIZE (BX,BY)
+ C
+       JX = MOD(N-1,BX)+1
+       JY = INT((N-1)/BX)+1
+-      PIXMAP1 = PIXMAP(JX,JY)
++      GRGIPX1 = PIXMAP(JX,JY)
+       RETURN
+       END
+       
+diff -up ./pgplot/drivers/ppdriv.f.orig ./pgplot/drivers/ppdriv.f
+--- ./pgplot/drivers/ppdriv.f.orig	2024-11-24 11:27:15.840980640 -0500
++++ ./pgplot/drivers/ppdriv.f	2024-11-24 11:35:55.639272273 -0500
+@@ -442,7 +442,7 @@ C
+ *+
+       SUBROUTINE GRPP02 (UNIT, BX, BY, PIXMAP)
+       INTEGER UNIT, BX, BY
+-      INTEGER *4 PIXMAP(BX,BY)
++      INTEGER*4 PIXMAP(BX,BY)
+ *
+ * This routine copies the image buffer to an output buffer. A PPM image
+ * header and the output buffer are written to UNIT.
+@@ -466,6 +466,7 @@ C
+       CHARACTER*20 TODAY
+       CHARACTER*(BUFSIZ) BUF
+       LOGICAL BAD
++      INTEGER*4 GRPPX1
+ *
+ *     Write the header (magic number = P6)
+ *
+@@ -484,12 +485,9 @@ C
+       IBUF=0
+       BAD = .FALSE.
+       DO 10 I=1,N
+-         BUF(IBUF+1:IBUF+1) = CHAR(MOD(
+-     +        PIXMAP(INT(I/BX)+1,MOD(I,BY)+1),256))
+-         BUF(IBUF+2:IBUF+2) = CHAR(MOD(
+-     +        PIXMAP(INT(I/BX)+1,MOD(I,BY)+1)/256,256))
+-         BUF(IBUF+3:IBUF+3) = CHAR(
+-     +        PIXMAP(INT(I/BX)+1,MOD(I,BY)+1)/(256*256))
++         BUF(IBUF+1:IBUF+1) = CHAR(MOD(GRPPX1(PIXMAP,BX,BY,I),256))
++         BUF(IBUF+2:IBUF+2) = CHAR(MOD(GRPPX1(PIXMAP,BX,BY,I)/256,256))
++         BUF(IBUF+3:IBUF+3) = CHAR(GRPPX1(PIXMAP,BX,BY,I)/(256*256))
+          IBUF = IBUF+3
+          IF (IBUF.GE.BUFSIZ) THEN
+             IER = GRWFCH(UNIT, BUF)
+@@ -579,3 +577,20 @@ C        -- last resort: invent a new na
+       CALL GRWARN ('Writing new PPM image as: '//TMP(:L))
+       NAME2 = TMP(:L)
+       END
++c
++c     
++c
++      INTEGER*4 FUNCTION GRPPX1(PIXMAP,BX,BY,N)
++      IMPLICIT NONE
++      INTEGER BX, BY, N
++      INTEGER*4 PIXMAP(BX,BY)
++      INTEGER JX, JY
++C
++C     CONVERT 1D ARRAY INDEX TO 2D INDICES (JX,JY) FOR ARRAY OF
++C     SIZE (BX,BY)
++C
++      JX = MOD(N-1,BX)+1
++      JY = INT((N-1)/BX)+1
++      GRPPX1 = PIXMAP(JX,JY)
++      RETURN
++      END
